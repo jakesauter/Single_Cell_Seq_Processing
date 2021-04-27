@@ -1,0 +1,537 @@
+---
+title: "Single Cell RNA-Seq Data Processing"
+author: "Jake Sauter"
+date: "4/22/2021"
+output: 
+  html_document: 
+    toc: true
+    toc_float: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE, 
+                      comment = NA)
+```
+
+**Reference Used**
+
+[HBC Training resource referenced throughout this assignment.](https://hbctraining.github.io/scRNA-seq/lessons/04_SC_quality_control.html)
+
+**Libraries Used**
+
+```{r}
+library(scran)
+library(dplyr)
+library(scater)
+library(tibble)
+library(pheatmap)
+library(RColorBrewer)
+```
+
+
+## **Loading Data**
+
+For this excercise, we will be using pancreas data from [Baron et al. (2016)](https://pubmed.ncbi.nlm.nih.gov/27667365/)
+
+```{r}
+baron.sce <- scRNAseq::BaronPancreasData('human')
+```
+
+In **Table S2** of the reference publication, Baron et. al identify Pancreas cell gene markers that we will make use of in this analysis.
+
+```{r}
+cell.markers <- 
+  tibble(cell=c("Alpha", "Beta", "Delta", "Gamma","Epsilon", "Ductal", 
+                "Acinar", "Stellate","Vascular", "Macrophage", "CytotoxicT", "Mast"),
+         gene=c("GCG", "INS", "SST", "PPY", "GHRL", "KRT19" ,
+                "CPA1" ,"PDGFRB", "VWF", "CD163", "CD3D", "TPSAB1" ))
+```
+
+In this analysis, we will also make use of additional pancreas data from [Grun etal. (2016)](https://pubmed.ncbi.nlm.nih.gov/27345837/)
+
+
+## **Integrating Datasets**
+
+**TODO: Chapter 13, dataset integration**
+
+```{r}
+# grun.sce <- scRNAseq::GrunPancreasData()
+```
+
+## **Annotating Gene Names**
+
+**Note**: We have used the `AnnotationHub` package to annotate the genes here, though `Organism.dplyr` or `EnsDb.Hsapiens.v86` could also be used to perform this same task.
+
+```{r}
+library(AnnotationHub)
+
+ens.GRCh38 <- AnnotationHub()[["AH73881"]]
+```
+
+* `columns` shows which kinds of data can be returned for the AnnotationDb object.
+* `keytypes` allows the user to discover which keytypes can be passed in to select or keys and the keytype argument.
+* `mapIds` gets the mapped ids (column) for a set of keys that are of a particular keytype. Usually returned as a named character vector.
+
+```{r}
+columns(ens.GRCh38)
+```
+
+
+```{r}
+keytypes(ens.GRCh38)
+```
+
+
+```{r}
+baron.keys <- rownames(baron.sce)
+
+baron.keys[1:10]
+```
+
+```{r}
+locations <- 
+  mapIds(ens.GRCh38, 
+         keys = baron.keys, 
+         keytype = "GENENAME", 
+         column = 'GENESEQSTART') 
+
+chromosomes <- 
+  mapIds(ens.GRCh38, 
+     keys = baron.keys, 
+     keytype = "GENENAME", 
+     column = 'SEQNAME')
+
+descriptions <- 
+  mapIds(ens.GRCh38, 
+         keys = baron.keys, 
+         keytype = "GENENAME", 
+         column = 'DESCRIPTION')
+
+rowData(baron.sce) <-  
+  data.frame(Gene_Name = baron.keys, 
+             Gene_Location = locations, 
+             Gene_Description = descriptions)
+
+```
+
+## **Filter**
+
+### **Identifying mitochondrial genes**
+
+It seems that all mitochondrial genes have been filtered from the Baron et al. dataset 
+before it was uploaded.
+
+```{r}
+rownames(baron.sce) %>% 
+  grep('^MT', x = ., value = TRUE)
+```
+
+```{r}
+chromosomes %>% 
+  unique
+```
+
+### **Cell Data Quality Control**
+
+Below we will use the `scater::addPerCellQC()` function in order to evaluate the per-cell quality of our data. The returned `DataFrame` (in the `colData` of our SCE object) from this function contains a `sum` column, indicating the total count for each cell, and the `detected` column contains the number of detected genes for each cell..
+
+```{r}
+baron.sce <- addPerCellQC(baron.sce)
+
+baron.sce %>%
+  colData() %>% 
+  head()
+```
+
+**Note that we could have performed the same analysis with more controls for per cell and per gene quality control metrics with the `scater::isOutlier()` function like below**
+
+```{r}
+baron.qc.rna_counts <-
+  scater::isOutlier(baron.sce$sum,
+                    log = TRUE,
+                    type="lower",
+                    # batch=baron.sce$donor
+  )
+
+attr(baron.qc.rna_counts, 'thresholds')
+```
+
+```{r}
+baron.qc.gene_counts <-
+  scater::isOutlier(baron.sce$detected,
+                    log = TRUE,
+                    type="lower",
+                    # batch=baron.sce$donor
+  )
+
+attr(baron.qc.gene_counts, "thresholds")
+```
+
+**Why have we discarded certain cells?**
+
+```{r}
+reasons <- quickPerCellQC(baron.sce)
+colSums(as.matrix(reasons))
+```
+
+### **Violin Plots**
+
+```{r}
+plotColData(baron.sce, 
+            x="donor", 
+            y="detected", 
+            colour_by = 'donor')
+```
+
+### **Diagnostic Plots**
+
+Usually we would be plotting different factors versus the number of mitochondrial genes, however they were not available in this study data. Instead, to illistrate the point of a diagnostic plot, we will be plotting the number of detected genes vs total sequence RNA segments for each cell.
+
+```{r}
+colData(baron.sce) %>% 
+  as.data.frame() %>% 
+  ggplot() + 
+  geom_point(aes(x = detected, 
+                 y = sum), 
+             color = 'deepskyblue', 
+             pch = 21, alpha = 0.3) + 
+  xlab('# Detected Genes (cell)') + ylab('Sum of total RNA-seq Counts (cell)')
+```
+
+We see from this plot above that most cells seem to follow an expected trend of **slowly** accumulating more total reads with more detected genes.
+
+
+## **Normalization**
+
+>  <font size=2.5> We see that the deconvolution size factors exhibit cell type-specific deviations from the library size factors in the figure below. This is consistent with the presence of composition biases that are introduced by strong differential expression between cell types. Use of the deconvolution size factors adjusts for these biases to improve normalization accuracy for downstream applications. </font>
+
+```{r}
+bpparam <- BiocParallel::MulticoreParam(workers = 6)
+
+baron.clusters <- quickCluster(baron.sce, 
+                               BPPARAM = bpparam) 
+
+# Normalize by deconvolution
+baron.deconv.sf <-  
+  scran::calculateSumFactors(baron.sce, 
+                             clusters = baron.clusters,
+                             BPPARAM = bpparam)
+
+# Original size factors 
+baron.lib.sf <- librarySizeFactors(baron.sce)
+
+plot_colors <- 
+  baron.sce %>% 
+  .$label %>% 
+  factor() 
+
+# Plot comparison between size factos
+data.frame(x = log(baron.lib.sf),
+           y = log(baron.deconv.sf), 
+           color = plot_colors) %>% 
+  ggplot() + 
+  geom_point(aes(x = x, y = y, color = color)) +
+  geom_abline(slope = 1, intercept = 0) + 
+  xlab("log(Library size factor)") + 
+  ylab("log(Deconvolution size factor)") 
+```
+
+
+## **Feature Selection**
+
+In order to use `scran::modelGeneVar()` we must provide a **A numeric matrix of log-normalized expression values where rows are genes and columns are cells.** as input.
+
+```{r}
+baron.sce <- logNormCounts(baron.sce,
+                           BPPARAM = bpparam)
+
+## model gene variance
+baron.dce <- scran::modelGeneVar(baron.sce, 
+                                 BPPARAM = bpparam)
+
+## plot mean- variance
+baron.fit <- metadata(baron.dce)
+
+data.frame(x = baron.fit$mean, 
+           y = baron.fit$var) %>% 
+  ggplot() + 
+  geom_point(aes(x = x, y = y), 
+             color = 'deepskyblue') + 
+  stat_function(fun = baron.fit$trend, 
+                aes(color = 'Trend Curve')) + 
+  scale_color_manual(values = 
+                       c('Trend Curve' = 'gray36')) + 
+  xlab('Mean') + ylab('Variance') + 
+  theme(legend.title = element_blank())
+```
+
+> <font size=2.5> At any given abundance, we assume that the expression profiles of most genes are dominated by random technical noise. Under this assumption, our trend represents an estimate of the technical noise as a function of abundance. We then break down the total variance of each gene into the technical component, i.e., the fitted value of the trend at that gene’s abundance; and the biological component, defined as the difference between the total variance and the technical component. This biological component represents the “interesting” variation for each gene and can be used as the metric for HVG selection. </font>
+
+**Selecting HVGs**
+
+```{r}
+baron.dce <- 
+  baron.dce %>% 
+  .[!is.na(.$FDR), ]
+
+sorted_order <- order(baron.dce$bio, decreasing=TRUE)
+
+baron.dce %>% 
+  .[sorted_order[1:10], ]
+```
+
+In this analysis we will be using an FDR cutoff of **0.01**, meaning that we would expect **1** in **100** of the returned genes to not actually contain substantial biological variance. 
+
+```{r}
+baron.hvg <- 
+  getTopHVGs(baron.dce, 
+             fdr.threshold = 0.01)
+
+baron.hvg %>% 
+  length() %>% 
+  cat('genes determined to be significant')
+```
+
+## **Clustering**
+
+>  <font size=2.5> Clustering is an unsupervised learning procedure that is used in scRNA-seq data analysis to empirically define groups of cells with similar expression profiles. Its primary purpose is to summarize the data in a digestible format for human interpretation. This allows us to describe population heterogeneity in terms of discrete labels that are easily understood, rather than attempting to comprehend the high-dimensional manifold on which the cells truly reside. After annotation based on marker genes, the clusters can be treated as proxies for more abstract biological concepts such as cell types or states. Clustering is thus a critical step for extracting biological insights from scRNA-seq data. Here, we demonstrate the application of several commonly used methods with the 10X PBMC dataset. </font>
+
+### **Principle Component Analysis**
+
+```{r}
+baron.sce <- runPCA(baron.sce, 
+                    subset_row = baron.hvg) 
+
+reducedDimNames(baron.sce)
+```
+
+
+**Selecting a meaningful number of dimensions and plot**
+
+```{r}
+percent.var <- 
+  attr(reducedDim(baron.sce), 
+       "percentVar")
+
+data.frame(x = seq_along(percent.var), 
+           y = percent.var) %>% 
+  ggplot() + 
+  geom_point(aes(x = x, y = y)) +
+  geom_vline(aes(xintercept = 6.5, 
+                 color = 'Elbow Point'), 
+             lty = 2) +
+  xlab('Principle Component #') + 
+  ylab("Variance explained (%)") + 
+  scale_color_manual(values = c('Elbow Point' = 'red')) + 
+  theme(legend.title = element_blank())
+```
+
+We can use `PCAtools::findElbowPoint` to help us identify how many principle components we should use moving forward.
+
+```{r}
+chosen.elbow <- 
+  PCAtools::findElbowPoint(percent.var)
+
+chosen.elbow
+```
+
+Saving these more informational princriple components into our single cell object.
+
+```{r}
+reducedDim(baron.sce, 
+           "PCA.elbow") <- 
+    reducedDim(baron.sce)[ ,1:chosen.elbow]
+
+reducedDimNames(baron.sce)
+```
+
+Now we can plot these reduced dimensions with `plotReducedDim`
+
+```{r, fig.width = 10}
+plotReducedDim(baron.sce, 
+             dimred="PCA", 
+             colour_by="donor")
+
+plotReducedDim(baron.sce, 
+               dimred="PCA", 
+               colour_by="label")
+```
+
+### **t-SNE**
+
+```{r, fig.width = 10}
+set.seed(497)
+
+baron.sce <- 
+  runTSNE(baron.sce, 
+          dimred="PCA", 
+          BPPARAM = bpparam)
+
+plotReducedDim(baron.sce, 
+             dimred="TSNE", 
+             colour_by="donor")
+
+plotReducedDim(baron.sce, 
+               dimred="TSNE", 
+               colour_by="label")
+
+```
+
+### **UMAP**
+
+```{r, fig.width = 10}
+baron.sce <- runUMAP(baron.sce, 
+                     dimred="PCA", 
+                     BPPARAM = bpparam)
+
+plotReducedDim(baron.sce, 
+               dimred="UMAP", 
+               colour_by="donor")
+
+plotReducedDim(baron.sce, 
+               dimred="UMAP", 
+               colour_by="label")
+```
+
+
+### **Shared Nearest-Neighbors**
+
+```{r}
+## build shared nearest-neighbor graph and plot
+baron.ssngraph <- 
+  buildSNNGraph(baron.sce, 
+                k=30, 
+                use.dimred = 'PCA.elbow', 
+                BPPARAM = bpparam)
+
+clusters <- igraph::cluster_walktrap(baron.ssngraph)
+
+table(clusters$membership)
+```
+
+**or**
+
+```{r}
+library(bluster)
+
+clust2 <- 
+  clusterRows(
+    reducedDim(baron.sce, "PCA.elbow"), 
+    NNGraphParam())
+
+table(clust2)
+```
+
+### **Cluster Modularity**
+
+> <font size=2.5> Modularity is the fraction of the edges that fall within the given groups minus the expected fraction if edges were distributed at random. It is positive if the number of edges within groups exceeds the number expected on the basis of chance. For a given division of the network's vertices into some modules, modularity reflects the concentration of edges within modules compared with random distribution of links between all nodes regardless of modules. </font>
+
+Below we use the function `pairwiseModularity()` to calculate the the modularity of each pair of clusters from a graph, based on a null model of random connections between nodes. The deeper the red, the more modular (more connections than expected) are found between the clusters. 
+
+```{r}
+ratio <- 
+  bluster::pairwiseModularity(baron.ssngraph, 
+                              clusters$membership, 
+                              as.ratio=TRUE)
+
+pheatmap(log2(ratio+1), 
+         cluster_cols = FALSE, 
+         cluster_rows = FALSE, 
+         color = colorRampPalette(
+                    brewer.pal(n = 7, 
+                               name = "Reds"))(100))
+```
+
+
+### **Plotting Clusters**
+
+```{r}
+colLabels(baron.sce) <- factor(clusters$membership)
+
+plotReducedDim(baron.sce, 
+             "TSNE", 
+             colour_by="donor")
+
+plotReducedDim(baron.sce, 
+               "TSNE", 
+               colour_by="label")
+```
+
+
+## **Identifying Marker genes**
+
+Find stringent markers. Only genes that are unique to **each** cluster are identified. e.g. Insulin will be missed**
+
+```{r, fig.height=7}
+baron.markers <- findMarkers(baron.sce)
+
+chosen <- "3"
+interesting <- baron.markers[[chosen]]
+colnames(interesting)
+
+best.set <- interesting[interesting$Top <= 6,]
+logFCs <- getMarkerEffects(best.set)
+
+pheatmap(logFCs)
+```
+
+### **Finding Marker Genes**
+
+```{r}
+chosen <- 3
+
+baron.markers.up <- 
+  findMarkers(baron.sce, direction="up")
+
+interesting.up <- baron.markers.up[[chosen]]
+
+interesting.up[1:10,1:4]
+```
+
+
+### **Plot Insulin Marker**
+
+```{r, fig.width = 10}
+plotExpression(baron.sce, 
+               x="label",
+               colour_by = 'label', 
+               features='INS')
+```
+
+
+### **Plotting Markers for a Specific Cluster**
+
+```{r}
+interesting_cluster <- baron.markers.up[[chosen]]
+```
+
+
+## **Annotate clusters**
+
+```{r}
+cell.markers <- 
+  tibble(cell=c("Alpha", "Beta", "Delta", "Gamma","Epsilon", "Ductal", "Acinar", "Stellate","Vascular", "Macrophage", "CytotoxicT", "Mast"),
+         gene=c("GCG", "INS", "SST", "PPY", "GHRL", "KRT19" ,
+                "CPA1" ,"PDGFRB", "VWF", "CD163", "CD3D", "TPSAB1" ))
+```
+
+
+```{r}
+# Annotate the clusters using type.markers
+# Does this mean "cell.markers" as defined above? 
+
+```
+
+
+## save SCE object
+
+
+```{r}
+# saveRDS(baron.sce, file = paste0("../data/BaronHumanSCE_", Sys.Date(), ".Rds"))
+```
+
+https://bioconductor.org/books/release/OSCA/cell-type-annotation.html#assigning-cluster-labels-from-markers

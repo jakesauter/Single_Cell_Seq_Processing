@@ -1,0 +1,8 @@
+"0","colData(baron.sce) %>% "
+"0","  as.data.frame() %>% "
+"0","  ggplot() + "
+"0","  geom_point(aes(x = detected, "
+"0","                 y = sum), "
+"0","             color = 'deepskyblue', "
+"0","             pch = 21, alpha = 0.3) + "
+"0","  xlab('# Detected Genes (cell)') + ylab('Sum of total RNA-seq Counts (cell)')"

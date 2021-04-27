@@ -1,0 +1,24 @@
+{
+    "id": "0B57BFEE",
+    "path": "~/Documents/Weill_Cornell/Functional_Interpretation/epigenomics/single_cell_assignment/src/scRNA-template.R",
+    "project_path": "src/scRNA-template.R",
+    "type": "r_source",
+    "hash": "1627156933",
+    "contents": "",
+    "dirty": false,
+    "created": 1619141107153.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1619141592,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1619141592319,
+    "read_only": false,
+    "read_only_alternatives": []
+}
