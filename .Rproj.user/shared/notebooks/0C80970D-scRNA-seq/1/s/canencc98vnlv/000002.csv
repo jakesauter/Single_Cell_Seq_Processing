@@ -1,5 +1,0 @@
-"0","cell.markers <- "
-"0","  tibble(cell=c(""Alpha"", ""Beta"", ""Delta"", ""Gamma"",""Epsilon"", ""Ductal"", "
-"0","                ""Acinar"", ""Stellate"",""Vascular"", ""Macrophage"", ""CytotoxicT"", ""Mast""),"
-"0","         gene=c(""GCG"", ""INS"", ""SST"", ""PPY"", ""GHRL"", ""KRT19"" ,"
-"0","                ""CPA1"" ,""PDGFRB"", ""VWF"", ""CD163"", ""CD3D"", ""TPSAB1"" ))"

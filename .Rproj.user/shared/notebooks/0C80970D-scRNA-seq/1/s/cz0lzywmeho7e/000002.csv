@@ -1,8 +1,0 @@
-"0","chosen.elbow <- "
-"0","  PCAtools::findElbowPoint(percent.var)"
-"0",""
-"0","chosen.elbow"
-"1","[1]"
-"1"," 6"
-"1","
-"
