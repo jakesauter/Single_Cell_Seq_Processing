@@ -7,8 +7,6 @@ A report by **Jake Sauter**
 **NOTE**: Full HTML version of the report will floating table of contents is live at the following link: [https://jakesauter.github.io/Single_Cell_Seq_Processing/](https://jakesauter.github.io/Single_Cell_Seq_Processing/)
 
 
-
-
 **Reference Used**
 
 [HBC Training resource referenced throughout this assignment.](https://hbctraining.github.io/scRNA-seq/lessons/04_SC_quality_control.html)
@@ -303,7 +301,7 @@ plotColData(baron.sce,
             colour_by = 'donor')
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
 
 ### **Diagnostic Plots**
 
@@ -321,7 +319,7 @@ colData(baron.sce) %>%
   xlab('# Detected Genes (cell)') + ylab('Sum of total RNA-seq Counts (cell)')
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
 
 We see from this plot above that most cells seem to follow an expected trend of **slowly** accumulating more total reads with more detected genes.
 
@@ -362,7 +360,7 @@ data.frame(x = log(baron.lib.sf),
   ylab("log(Deconvolution size factor)") 
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
 
 
 ## **Feature Selection**
@@ -394,7 +392,7 @@ data.frame(x = baron.fit$mean,
   theme(legend.title = element_blank())
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
 
 > <font size=2.5> At any given abundance, we assume that the expression profiles of most genes are dominated by random technical noise. Under this assumption, our trend represents an estimate of the technical noise as a function of abundance. We then break down the total variance of each gene into the technical component, i.e., the fitted value of the trend at that gene’s abundance; and the biological component, defined as the difference between the total variance and the technical component. This biological component represents the “interesting” variation for each gene and can be used as the metric for HVG selection. </font>
 
@@ -485,7 +483,7 @@ data.frame(x = seq_along(percent.var),
   theme(legend.title = element_blank())
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
 
 We can use `PCAtools::findElbowPoint` to help us identify how many principle components we should use moving forward.
 
@@ -525,7 +523,7 @@ plotReducedDim(baron.sce,
              colour_by="donor")
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
 
 ```r
 plotReducedDim(baron.sce, 
@@ -533,7 +531,7 @@ plotReducedDim(baron.sce,
                colour_by="label")
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-26-2.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-26-2.png)<!-- -->
 
 ### **t-SNE**
 
@@ -548,20 +546,18 @@ baron.sce <-
 
 plotReducedDim(baron.sce, 
              dimred  = "TSNE", 
-             colour_by="donor", 
-             text_by = 'label')
+             colour_by="donor")
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
 ```r
 plotReducedDim(baron.sce, 
                dimred = "TSNE", 
-               colour_by = "label", 
-               text_by = 'label')
+               colour_by = "label")
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-27-2.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-27-2.png)<!-- -->
 
 ### **UMAP**
 
@@ -573,20 +569,18 @@ baron.sce <- runUMAP(baron.sce,
 
 plotReducedDim(baron.sce, 
                dimred = "UMAP", 
-               colour_by = "donor", 
-               text_by = 'label')
+               colour_by = "donor")
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
 
 ```r
 plotReducedDim(baron.sce, 
                dimred = "UMAP", 
-               colour_by = "label", 
-               text_by = 'label')
+               colour_by = "label")
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-28-2.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-28-2.png)<!-- -->
 
 
 ### **Shared Nearest-Neighbors**
@@ -654,7 +648,7 @@ pheatmap(log2(ratio+1),
                                name = "Reds"))(100))
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-31-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-31-1.png)<!-- -->
 
 
 ```r
@@ -669,7 +663,7 @@ plot(
   layout=igraph::layout_in_circle)
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-32-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-32-1.png)<!-- -->
 
 
 ### **Plotting Clusters**
@@ -684,7 +678,7 @@ plotReducedDim(baron.sce,
              text_by = 'label')
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-33-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-33-1.png)<!-- -->
 
 ```r
 plotReducedDim(baron.sce, 
@@ -693,7 +687,7 @@ plotReducedDim(baron.sce,
                text_by = 'label')
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-33-2.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-33-2.png)<!-- -->
 
 
 ## **Identifying Marker genes**
@@ -723,7 +717,7 @@ logFCs <- getMarkerEffects(best.set)
 pheatmap(logFCs)
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-34-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-34-1.png)<!-- -->
 
 ### **Plot Insulin Marker**
 
@@ -735,7 +729,7 @@ plotExpression(baron.sce,
                features='INS')
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-35-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-35-1.png)<!-- -->
 
 ## **Annotate clusters**
 
@@ -817,10 +811,10 @@ plotReducedDim(baron.sce,
                colour_by="label")
 ```
 
-![](R/scRNA-seq_files/figure-html/unnamed-chunk-37-1.png)<!-- -->
+![](R/jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-37-1.png)<!-- -->
 
 
-## save SCE object
+## **Saving SCE object**
 
 
 ```r
