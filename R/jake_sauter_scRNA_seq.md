@@ -555,8 +555,7 @@ baron.sce <-
 
 plotReducedDim(baron.sce, 
              dimred  = "TSNE", 
-             colour_by="donor", 
-             text_by = 'label')
+             colour_by="donor")
 ```
 
 ![](jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
@@ -564,8 +563,7 @@ plotReducedDim(baron.sce,
 ```r
 plotReducedDim(baron.sce, 
                dimred = "TSNE", 
-               colour_by = "label", 
-               text_by = 'label')
+               colour_by = "label")
 ```
 
 ![](jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-27-2.png)<!-- -->
@@ -580,8 +578,7 @@ baron.sce <- runUMAP(baron.sce,
 
 plotReducedDim(baron.sce, 
                dimred = "UMAP", 
-               colour_by = "donor", 
-               text_by = 'label')
+               colour_by = "donor")
 ```
 
 ![](jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-28-1.png)<!-- -->
@@ -589,8 +586,7 @@ plotReducedDim(baron.sce,
 ```r
 plotReducedDim(baron.sce, 
                dimred = "UMAP", 
-               colour_by = "label", 
-               text_by = 'label')
+               colour_by = "label")
 ```
 
 ![](jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-28-2.png)<!-- -->
@@ -827,7 +823,7 @@ plotReducedDim(baron.sce,
 ![](jake_sauter_scRNA_seq_files/figure-html/unnamed-chunk-37-1.png)<!-- -->
 
 
-## save SCE object
+## **Saving SCE object**
 
 
 ```r

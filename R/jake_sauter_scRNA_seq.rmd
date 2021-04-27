@@ -1,7 +1,7 @@
 ---
 title: "Single Cell RNA-Seq Data Processing"
 author: "Jake Sauter"
-date: "4/22/2021"
+date: "4/27/2021"
 output: 
   html_document: 
     toc: true
@@ -380,13 +380,11 @@ baron.sce <-
 
 plotReducedDim(baron.sce, 
              dimred  = "TSNE", 
-             colour_by="donor", 
-             text_by = 'label')
+             colour_by="donor")
 
 plotReducedDim(baron.sce, 
                dimred = "TSNE", 
-               colour_by = "label", 
-               text_by = 'label')
+               colour_by = "label")
 
 ```
 
@@ -399,13 +397,11 @@ baron.sce <- runUMAP(baron.sce,
 
 plotReducedDim(baron.sce, 
                dimred = "UMAP", 
-               colour_by = "donor", 
-               text_by = 'label')
+               colour_by = "donor")
 
 plotReducedDim(baron.sce, 
                dimred = "UMAP", 
-               colour_by = "label", 
-               text_by = 'label')
+               colour_by = "label")
 ```
 
 
@@ -556,7 +552,7 @@ plotReducedDim(baron.sce,
 ```
 
 
-## save SCE object
+## **Saving SCE object**
 
 ```{r}
 saveRDS(baron.sce, file = paste0("../data/BaronHumanSCE_", Sys.Date(), ".Rds"))
