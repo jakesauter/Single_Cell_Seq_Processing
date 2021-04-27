@@ -4,6 +4,8 @@ A report by **Jake Sauter**
 
 4/27/2021
 
+**NOTE**: Full HTML version of the report will floating table of contents is live at the following link: https://jakesauter.github.io/Single_Cell_Seq_Processing/
+
 
 **Reference Used**
 
